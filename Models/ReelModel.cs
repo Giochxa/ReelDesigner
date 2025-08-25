@@ -26,6 +26,7 @@ namespace ReelDesigner.Models
 
         [Display(Name = "გულის სისქე (mm)")]
         [Range(5, 200)]
-        public double BarrelThickness { get; set; } = 50;
+        public double DrumThickness { get; set; } = 50;
     }
 }
+
