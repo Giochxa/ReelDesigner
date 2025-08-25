@@ -29,88 +29,88 @@ namespace ReelDesigner.Controllers
         }
 
         private string GenerateSvg(ReelModel m)
-        {
-            // Side view: concentric circles (flange outer, barrel, arbor)
-            // We’ll scale so the flange fits within 360px square with padding.
-            const int canvas = 400;               // px
-            const int pad = 20;                   // px padding
-            double maxDraw = canvas - pad * 2;    // drawing area
-            double scale = maxDraw / m.FlangeDiameter; // px per mm
-            double cx = canvas / 2.0;
-            double cy = canvas / 2.0;
+{
+    const int canvas = 400; 
+    const int pad = 20; 
+    double maxDraw = canvas - pad * 2;
+    double scale = maxDraw / m.FlangeDiameter; 
+    double cx = canvas / 2.0;
+    double cy = canvas / 2.0;
 
-            // Radii in px
-            double rFlange = (m.FlangeDiameter / 2.0) * scale;
-            double rBarrel = (m.BarrelDiameter / 2.0) * scale;
-            double rArbor = (m.ArborHoleDiameter / 2.0) * scale;
+    // Radii in px
+    double rFlange = (m.FlangeDiameter / 2.0) * scale;
+    double rBarrel = (m.BarrelDiameter / 2.0) * scale;
+    double rArbor = (m.ArborHoleDiameter / 2.0) * scale;
 
-            // For a bit of visual detail, draw a flange thickness ring
-            double rFlangeInner = Math.Max(rFlange - (m.FlangeThickness * scale), rBarrel + 2);
+    // Flange thickness ring
+    double rFlangeInner = Math.Max(rFlange - (m.FlangeThickness * scale), rBarrel + 2);
 
-            // Dimension helpers
-            string mm(double v) => v.ToString("0.#", CultureInfo.InvariantCulture);
-            string px(double v) => v.ToString("0.###", CultureInfo.InvariantCulture);
+    // Drum thickness: visualize as ring around barrel
+    double drumStroke = m.DrumThickness * scale;
+    double rDrumOuter = rBarrel;
+    double rDrumInner = rBarrel - drumStroke;
 
-            var sb = new StringBuilder();
-            sb.AppendLine($@"<svg xmlns=""http://www.w3.org/2000/svg"" width=""{canvas}"" height=""{canvas}"" viewBox=""0 0 {canvas} {canvas}"" aria-label=""Wooden reel side view"">");
+    // Helpers
+    string mm(double v) => v.ToString("0.#", CultureInfo.InvariantCulture);
+    string px(double v) => v.ToString("0.###", CultureInfo.InvariantCulture);
 
-            // Background
-            sb.AppendLine($@"  <rect x=""0"" y=""0"" width=""{canvas}"" height=""{canvas}"" fill=""white"" />");
+    var sb = new StringBuilder();
+    sb.AppendLine($@"<svg xmlns=""http://www.w3.org/2000/svg"" width=""{canvas}"" height=""{canvas}"" viewBox=""0 0 {canvas} {canvas}"" aria-label=""Wooden reel side view"">");
+    sb.AppendLine($@"  <rect x=""0"" y=""0"" width=""{canvas}"" height=""{canvas}"" fill=""white"" />");
 
-            // Flange outer
-            sb.AppendLine($@"  <circle cx=""{px(cx)}"" cy=""{px(cy)}"" r=""{px(rFlange)}"" fill=""#f7f7f7"" stroke=""#333"" stroke-width=""1.5"" />");
+    // Flange outer
+    sb.AppendLine($@"  <circle cx=""{px(cx)}"" cy=""{px(cy)}"" r=""{px(rFlange)}"" fill=""#f7f7f7"" stroke=""#333"" stroke-width=""1.5"" />");
 
-            // Flange inner (thickness ring)
-            sb.AppendLine($@"  <circle cx=""{px(cx)}"" cy=""{px(cy)}"" r=""{px(rFlangeInner)}"" fill=""white"" stroke=""#999"" stroke-width=""1"" />");
+    // Flange inner ring
+    sb.AppendLine($@"  <circle cx=""{px(cx)}"" cy=""{px(cy)}"" r=""{px(rFlangeInner)}"" fill=""white"" stroke=""#999"" stroke-width=""1"" />");
 
-            // Barrel (core)
-            sb.AppendLine($@"  <circle cx=""{px(cx)}"" cy=""{px(cy)}"" r=""{px(rBarrel)}"" fill=""#eaeaea"" stroke=""#555"" stroke-width=""1.2"" />");
+    // Barrel (core)
+    sb.AppendLine($@"  <circle cx=""{px(cx)}"" cy=""{px(cy)}"" r=""{px(rBarrel)}"" fill=""#eaeaea"" stroke=""#555"" stroke-width=""1.2"" />");
 
-            // Arbor hole
-            sb.AppendLine($@"  <circle cx=""{px(cx)}"" cy=""{px(cy)}"" r=""{px(rArbor)}"" fill=""white"" stroke=""#333"" stroke-width=""1.2"" />");
+    // Drum thickness ring
+    sb.AppendLine($@"  <circle cx=""{px(cx)}"" cy=""{px(cy)}"" r=""{px((rDrumOuter + rDrumInner)/2)}"" fill=""none"" stroke=""rgba(132, 151, 236, 1)"" stroke-width=""{px(drumStroke)}"" />");
 
-            // Cross hair for center
-            sb.AppendLine($@"  <line x1=""{px(cx - 8)}"" y1=""{px(cy)}"" x2=""{px(cx + 8)}"" y2=""{px(cy)}"" stroke=""#aaa"" />");
-            sb.AppendLine($@"  <line x1=""{px(cx)}"" y1=""{px(cy - 8)}"" x2=""{px(cx)}"" y2=""{px(cy + 8)}"" stroke=""#aaa"" />");
+    // Arbor hole
+    sb.AppendLine($@"  <circle cx=""{px(cx)}"" cy=""{px(cy)}"" r=""{px(rArbor)}"" fill=""white"" stroke=""#333"" stroke-width=""1.2"" />");
 
-            // DIMENSIONS: Flange diameter (vertical)
-            double xDim1 = pad * 0.8;
-            sb.AppendLine($@"  <line x1=""{px(xDim1)}"" y1=""{px(cy - rFlange)}"" x2=""{px(xDim1)}"" y2=""{px(cy + rFlange)}"" stroke=""#222"" stroke-width=""1"" />");
-            sb.AppendLine($@"  <line x1=""{px(xDim1 - 6)}"" y1=""{px(cy - rFlange)}"" x2=""{px(xDim1 + 6)}"" y2=""{px(cy - rFlange)}"" stroke=""#222"" />");
-            sb.AppendLine($@"  <line x1=""{px(xDim1 - 6)}"" y1=""{px(cy + rFlange)}"" x2=""{px(xDim1 + 6)}"" y2=""{px(cy + rFlange)}"" stroke=""#222"" />");
-            sb.AppendLine($@"  <text x=""{px(xDim1 + 8)}"" y=""{px(cy)}"" dominant-baseline=""middle"" font-size=""12"" fill=""#000"">{mm(m.FlangeDiameter)} mm (ბარაბნის Ø)</text>");
+    // Crosshair
+    sb.AppendLine($@"  <line x1=""{px(cx - 8)}"" y1=""{px(cy)}"" x2=""{px(cx + 8)}"" y2=""{px(cy)}"" stroke=""#aaa"" />");
+    sb.AppendLine($@"  <line x1=""{px(cx)}"" y1=""{px(cy - 8)}"" x2=""{px(cx)}"" y2=""{px(cy + 8)}"" stroke=""#aaa"" />");
 
-            // DIMENSIONS: Barrel diameter (right side vertical)
-            double xDim2 = canvas - pad * 0.8;
-            sb.AppendLine($@"  <line x1=""{px(xDim2)}"" y1=""{px(cy - rBarrel)}"" x2=""{px(xDim2)}"" y2=""{px(cy + rBarrel)}"" stroke=""#444"" stroke-width=""1"" />");
-            sb.AppendLine($@"  <line x1=""{px(xDim2 - 6)}"" y1=""{px(cy - rBarrel)}"" x2=""{px(xDim2 + 6)}"" y2=""{px(cy - rBarrel)}"" stroke=""#444"" />");
-            sb.AppendLine($@"  <line x1=""{px(xDim2 - 6)}"" y1=""{px(cy + rBarrel)}"" x2=""{px(xDim2 + 6)}"" y2=""{px(cy + rBarrel)}"" stroke=""#444"" />");
-            sb.AppendLine($@"  <text x=""{px(xDim2 - 8)}"" y=""{px(cy)}"" dominant-baseline=""middle"" text-anchor=""end"" font-size=""12"" fill=""#000"">{mm(m.BarrelDiameter)} mm (გულის Ø)</text>");
+    // Flange diameter label
+    double xDim1 = pad * 0.8;
+    sb.AppendLine($@"  <line x1=""{px(xDim1)}"" y1=""{px(cy - rFlange)}"" x2=""{px(xDim1)}"" y2=""{px(cy + rFlange)}"" stroke=""#222"" stroke-width=""1"" />");
+    sb.AppendLine($@"  <line x1=""{px(xDim1 - 6)}"" y1=""{px(cy - rFlange)}"" x2=""{px(xDim1 + 6)}"" y2=""{px(cy - rFlange)}"" stroke=""#222"" />");
+    sb.AppendLine($@"  <line x1=""{px(xDim1 - 6)}"" y1=""{px(cy + rFlange)}"" x2=""{px(xDim1 + 6)}"" y2=""{px(cy + rFlange)}"" stroke=""#222"" />");
+    sb.AppendLine($@"  <text x=""{px(xDim1 + 8)}"" y=""{px(cy)}"" dominant-baseline=""middle"" font-size=""12"" fill=""#000"">{mm(m.FlangeDiameter)} mm (ბარაბნის Ø)</text>");
 
-            // DIMENSIONS: Arbor hole (top horizontal)
-            double yDimTop = pad * 0.8;
-            sb.AppendLine($@"  <line x1=""{px(cx - rArbor)}"" y1=""{px(yDimTop)}"" x2=""{px(cx + rArbor)}"" y2=""{px(yDimTop)}"" stroke=""#444"" />");
-            sb.AppendLine($@"  <line x1=""{px(cx - rArbor)}"" y1=""{px(yDimTop - 6)}"" x2=""{px(cx - rArbor)}"" y2=""{px(yDimTop + 6)}"" stroke=""#444"" />");
-            sb.AppendLine($@"  <line x1=""{px(cx + rArbor)}"" y1=""{px(yDimTop - 6)}"" x2=""{px(cx + rArbor)}"" y2=""{px(yDimTop + 6)}"" stroke=""#444"" />");
-            sb.AppendLine($@"  <text x=""{px(cx)}"" y=""{px(yDimTop - 8)}"" text-anchor=""middle"" font-size=""12"">{mm(m.ArborHoleDiameter)} mm (ნახვრეტის დიამეტრი)</text>");
+    // Barrel diameter label
+    double xDim2 = canvas - pad * 0.8;
+    sb.AppendLine($@"  <line x1=""{px(xDim2)}"" y1=""{px(cy - rBarrel)}"" x2=""{px(xDim2)}"" y2=""{px(cy + rBarrel)}"" stroke=""#444"" stroke-width=""1"" />");
+    sb.AppendLine($@"  <line x1=""{px(xDim2 - 6)}"" y1=""{px(cy - rBarrel)}"" x2=""{px(xDim2 + 6)}"" y2=""{px(cy - rBarrel)}"" stroke=""#444"" />");
+    sb.AppendLine($@"  <line x1=""{px(xDim2 - 6)}"" y1=""{px(cy + rBarrel)}"" x2=""{px(xDim2 + 6)}"" y2=""{px(cy + rBarrel)}"" stroke=""#444"" />");
+    sb.AppendLine($@"  <text x=""{px(xDim2 - 8)}"" y=""{px(cy)}"" dominant-baseline=""middle"" text-anchor=""end"" font-size=""12"" fill=""#000"">{mm(m.BarrelDiameter)} mm (გულის Ø)</text>");
 
-// // DIMENSIONS: Barrel Thickness (difference between barrel radius and arbor radius)
-// double yDimBT = cy + rBarrel + 40; // place it below barrel circle
-// sb.AppendLine($@"  <line x1=""{px(cx + rArbor)}"" y1=""{px(yDimBT)}"" x2=""{px(cx + rBarrel)}"" y2=""{px(yDimBT)}"" stroke=""#d22"" stroke-width=""1"" />");
-// sb.AppendLine($@"  <line x1=""{px(cx + rArbor)}"" y1=""{px(yDimBT - 6)}"" x2=""{px(cx + rArbor)}"" y2=""{px(yDimBT + 6)}"" stroke=""#d22"" />");
-// sb.AppendLine($@"  <line x1=""{px(cx + rBarrel)}"" y1=""{px(yDimBT - 6)}"" x2=""{px(cx + rBarrel)}"" y2=""{px(yDimBT + 6)}"" stroke=""#d22"" />");
-// sb.AppendLine($@"  <text x=""{px(cx + (rArbor + rBarrel) / 2)}"" y=""{px(yDimBT - 8)}"" text-anchor=""middle"" font-size=""12"" fill=""#d22"">{mm(m.BarrelThickness)} mm (ბარაბნის სისქე)</text>");
+    // Arbor hole label
+    double yDimTop = pad * 0.8;
+    sb.AppendLine($@"  <line x1=""{px(cx - rArbor)}"" y1=""{px(yDimTop)}"" x2=""{px(cx + rArbor)}"" y2=""{px(yDimTop)}"" stroke=""#444"" />");
+    sb.AppendLine($@"  <line x1=""{px(cx - rArbor)}"" y1=""{px(yDimTop - 6)}"" x2=""{px(cx - rArbor)}"" y2=""{px(yDimTop + 6)}"" stroke=""#444"" />");
+    sb.AppendLine($@"  <line x1=""{px(cx + rArbor)}"" y1=""{px(yDimTop - 6)}"" x2=""{px(cx + rArbor)}"" y2=""{px(yDimTop + 6)}"" stroke=""#444"" />");
+    sb.AppendLine($@"  <text x=""{px(cx)}"" y=""{px(yDimTop - 8)}"" text-anchor=""middle"" font-size=""12"">{mm(m.ArborHoleDiameter)} mm (ნახვრეტის დიამეტრი)</text>");
 
+    // Drum thickness label (below barrel)
+    double yDimBT = cy + rBarrel + 20;
+    sb.AppendLine($@"  <line x1=""{px(cx - rBarrel)}"" y1=""{px(yDimBT)}"" x2=""{px(cx - rDrumInner)}"" y2=""{px(yDimBT)}"" stroke=""#444"" stroke-width=""1"" />");
+    sb.AppendLine($@"  <line x1=""{px(cx - rBarrel)}"" y1=""{px(yDimBT - 6)}"" x2=""{px(cx - rBarrel)}"" y2=""{px(yDimBT + 6)}"" stroke=""#444"" />");
+    sb.AppendLine($@"  <line x1=""{px(cx - rDrumInner)}"" y1=""{px(yDimBT - 6)}"" x2=""{px(cx - rDrumInner)}"" y2=""{px(yDimBT + 6)}"" stroke=""#444"" />");
+    sb.AppendLine($@"  <text x=""{px(cx - (rBarrel + rDrumInner)/2)}"" y=""{px(yDimBT - 8)}"" text-anchor=""middle"" font-size=""12"" fill=""#444"">{mm(m.DrumThickness)} mm (გულის სისქე)</text>");
 
-            // LABEL: Width (not visible in side view) — show as note
-            //sb.AppendLine($@"  <text x=""{px(cx)}"" y=""{px(canvas - pad)}"" text-anchor=""middle"" font-size=""12"" fill=""#222"">Traverse Width: {mm(m.Width)} mm</text>");
+    // Scale note
+    sb.AppendLine($@"  <text x=""{px(canvas - pad)}"" y=""{px(canvas - pad)}"" text-anchor=""end"" font-size=""10"" fill=""#666"">Scale: {px(scale)} px/mm</text>");
+    sb.AppendLine("</svg>");
+    return sb.ToString();
+}
 
-            // Scale note
-            sb.AppendLine($@"  <text x=""{px(canvas - pad)}"" y=""{px(canvas - pad)}"" text-anchor=""end"" font-size=""10"" fill=""#666"">Scale: {px(scale)} px/mm</text>");
-
-            sb.AppendLine("</svg>");
-            return sb.ToString();
-        }
         
 private string GenerateFrontViewSvg(ReelModel m)
 {
