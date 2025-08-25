@@ -55,7 +55,7 @@ namespace ReelDesigner.Controllers
     string px(double v) => v.ToString("0.###", CultureInfo.InvariantCulture);
 
     var sb = new StringBuilder();
-    sb.AppendLine($@"<svg xmlns=""http://www.w3.org/2000/svg"" width=""{canvas}"" height=""{canvas}"" viewBox=""0 0 {canvas} {canvas}"" aria-label=""Wooden reel side view"">");
+    sb.AppendLine($@"<svg xmlns=""http://www.w3.org/2000/svg"" width=""{canvas}"" height=""{canvas+50}"" viewBox=""0 0 {canvas} {canvas}"" aria-label=""Wooden reel side view"">");
     sb.AppendLine($@"  <rect x=""0"" y=""0"" width=""{canvas}"" height=""{canvas}"" fill=""white"" />");
 
     // Flange outer
@@ -136,7 +136,7 @@ private string GenerateFrontViewSvg(ReelModel m)
     string px(double v) => v.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
 
     var sb = new System.Text.StringBuilder();
-    sb.AppendLine($@"<svg xmlns=""http://www.w3.org/2000/svg"" width=""{canvasW}"" height=""{canvasH}"" viewBox=""0 0 {canvasW} {canvasH}"">");
+    sb.AppendLine($@"<svg xmlns=""http://www.w3.org/2000/svg"" width=""{canvasW}"" height=""{canvasH+50}"" viewBox=""0 0 {canvasW} {canvasH}"">");
 
     // Barrel rectangle
     sb.AppendLine($@"  <rect x=""{px(cx - halfWidth)}"" y=""{px(cy - rBarrel)}"" width=""{px(m.Width * scale)}"" height=""{px(rBarrel * 2)}"" fill=""#fdf2b3"" stroke=""#555"" />");
